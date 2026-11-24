@@ -15,6 +15,10 @@
 * {
   box-sizing: border-box;
 }
+/* the hidden attribute must win over display rules like .cam-empty { display: grid } */
+[hidden] {
+  display: none !important;
+}
 html,
 body {
   margin: 0;

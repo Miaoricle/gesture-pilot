@@ -1,7 +1,7 @@
 /** Webcam + MediaPipe gesture recognizer. Everything runs on this device; frames are never uploaded. */
 
 import { DrawingUtils, FilesetResolver, GestureRecognizer } from '@mediapipe/tasks-vision'
-import type { Gesture, Reading } from './control'
+import { handTilt, type Gesture, type Reading } from './control'
 
 // Google's pre-trained canned-gesture model (float16, ~8 MB)
 const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task'
@@ -74,12 +74,12 @@ export class HandTracker {
     ctx.clearRect(0, 0, this.overlay.width, this.overlay.height)
 
     const hand = result.landmarks[0]
-    if (!hand) return { gesture: 'None', score: 0, handX: null }
+    if (!hand) return { gesture: 'None', score: 0, tilt: null }
     this.draw.drawConnectors(hand, GestureRecognizer.HAND_CONNECTIONS, { color: '#f5a524', lineWidth: 3 })
     this.draw.drawLandmarks(hand, { color: '#0e1110', fillColor: '#f5a524', radius: 3, lineWidth: 1 })
 
     const top = result.gestures[0]?.[0]
-    // the preview is mirrored, so flip x to match what the user sees
-    return { gesture: (top?.categoryName || 'None') as Gesture, score: top?.score ?? 0, handX: 1 - hand[0].x }
+    const aspect = this.video.videoWidth / this.video.videoHeight || 4 / 3
+    return { gesture: (top?.categoryName || 'None') as Gesture, score: top?.score ?? 0, tilt: handTilt(hand[0], hand[9], aspect) }
   }
 }

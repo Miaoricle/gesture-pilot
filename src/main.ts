@@ -108,7 +108,7 @@ function frame(now: number) {
   const reading = tracker.read(now)
   if (reading) {
     handCommand = smoother.push(reading)
-    handSteer = steering(reading.handX)
+    handSteer = steering(reading.tilt)
     ui.gesture.textContent = reading.gesture === 'None' ? 'no hand' : reading.gesture.replace('_', ' ').toLowerCase()
     ui.score.textContent = reading.score ? `${Math.round(reading.score * 100)}%` : ''
     ui.meter.style.width = `${smoother.progress * 100}%`

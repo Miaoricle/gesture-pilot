@@ -32,11 +32,13 @@ export const COMMAND_LABEL: Record<Command, string> = {
   none: '—',
 }
 
-export type Reading = { gesture: Gesture; score: number; handX: number | null }
+/** tilt: hand tilt in degrees (see handTilt), null when no hand is visible */
+export type Reading = { gesture: Gesture; score: number; tilt: number | null }
 
 export type SmootherOptions = { holdFrames: number; minScore: number; deadZone: number }
 
-export const DEFAULTS: SmootherOptions = { holdFrames: 6, minScore: 0.6, deadZone: 0.12 }
+// deadZone is in degrees of hand tilt
+export const DEFAULTS: SmootherOptions = { holdFrames: 6, minScore: 0.6, deadZone: 12 }
 
 export class CommandSmoother {
   private candidate: Command = 'none'
@@ -79,15 +81,27 @@ export class CommandSmoother {
   }
 }
 
+type Point = { x: number; y: number }
+
 /**
- * Steering from where the hand is in the frame: left of centre turns left.
- * `handX` is the wrist x in 0..1 of the *mirrored* preview, so it matches what
- * the user sees. Returns -1..1, with a dead zone in the middle.
+ * How far the hand is tilted, in degrees: 0 = fingers straight up,
+ * positive = leaning right *as seen in the mirrored preview*.
+ *
+ * Uses the line from the wrist (landmark 0) to the middle-finger knuckle
+ * (landmark 9), which barely changes between gestures, so you can steer
+ * while holding any of them. Landmarks are normalised to the camera frame,
+ * so x is scaled by the frame's aspect ratio to get a true angle.
  */
-export function steering(handX: number | null, deadZone = DEFAULTS.deadZone): number {
-  if (handX === null) return 0
-  const offset = (handX - 0.5) * 2 // -1..1
-  if (Math.abs(offset) <= deadZone) return 0
-  const s = (Math.abs(offset) - deadZone) / (1 - deadZone)
-  return Math.sign(offset) * Math.min(1, s)
+export function handTilt(wrist: Point, knuckle: Point, aspect = 4 / 3): number {
+  const dx = -(knuckle.x - wrist.x) * aspect // minus: the preview is mirrored
+  const dy = wrist.y - knuckle.y // image y grows downwards
+  return (Math.atan2(dx, dy) * 180) / Math.PI
+}
+
+/** Tilt in degrees -> steering -1..1, with a dead zone so a relaxed hand flies straight. */
+export function steering(tiltDeg: number | null, deadZone = DEFAULTS.deadZone, fullTilt = 40): number {
+  if (tiltDeg === null) return 0
+  const a = Math.abs(tiltDeg)
+  if (a <= deadZone) return 0
+  return Math.sign(tiltDeg) * Math.min(1, (a - deadZone) / (fullTilt - deadZone))
 }

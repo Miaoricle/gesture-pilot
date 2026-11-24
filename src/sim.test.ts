@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { CommandSmoother, steering, type Gesture } from './control'
+import { CommandSmoother, handTilt, steering, type Gesture } from './control'
 import { createDrone, headingDeg, LIMITS, step, type Drone } from './drone'
 
 const frames = (s: CommandSmoother, gesture: Gesture, n: number, score = 0.9) => {
   let out = s.current
-  for (let i = 0; i < n; i++) out = s.push({ gesture, score, handX: 0.5 })
+  for (let i = 0; i < n; i++) out = s.push({ gesture, score, tilt: 0 })
   return out
 }
 
@@ -32,14 +32,26 @@ describe('CommandSmoother', () => {
   })
 })
 
-describe('steering', () => {
-  it('has a dead zone and saturates at the edges', () => {
-    expect(steering(0.5)).toBe(0)
-    expect(steering(0.55, 0.12)).toBe(0)
-    expect(steering(1, 0.12)).toBe(1)
-    expect(steering(0, 0.12)).toBe(-1)
+describe('hand tilt steering', () => {
+  const wrist = { x: 0.5, y: 0.8 }
+
+  it('reads an upright hand as 0°', () => {
+    expect(handTilt(wrist, { x: 0.5, y: 0.5 })).toBeCloseTo(0)
+  })
+
+  it('is mirrored: knuckle further left in the raw camera image = leaning right on screen', () => {
+    // 45° in true pixels on a 4:3 frame: dx * 4/3 == dy
+    const right = handTilt(wrist, { x: 0.5 - 0.3 * 0.75, y: 0.5 }, 4 / 3)
+    expect(right).toBeCloseTo(45)
+    expect(handTilt(wrist, { x: 0.5 + 0.3 * 0.75, y: 0.5 }, 4 / 3)).toBeCloseTo(-45)
+  })
+
+  it('maps tilt to -1..1 with a dead zone', () => {
     expect(steering(null)).toBe(0)
-    expect(steering(0.75, 0)).toBeCloseTo(0.5)
+    expect(steering(10, 12)).toBe(0) // relaxed hand: straight
+    expect(steering(26, 12, 40)).toBeCloseTo(0.5)
+    expect(steering(-60, 12, 40)).toBe(-1)
+    expect(steering(90, 12, 40)).toBe(1)
   })
 })
 

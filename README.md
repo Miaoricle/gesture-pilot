@@ -18,7 +18,7 @@ Hand tracking and gesture recognition run on your device with [MediaPipe Gesture
 | Pointing up | Climb | <kbd>W</kbd> |
 | Thumb down | Descend | <kbd>S</kbd> |
 | Victory (V) | Fly forward | <kbd>↑</kbd> |
-| Hand left / right of centre | Turn | <kbd>←</kbd> <kbd>→</kbd> |
+| Tilt your hand left / right | Turn | <kbd>←</kbd> <kbd>→</kbd> |
 
 ## Why it doesn't twitch
 
@@ -29,7 +29,7 @@ So the gesture goes through a small smoother ([`src/control.ts`](src/control.ts)
 - A frame only counts if the model's confidence is at least 0.6.
 - The command changes only after the **same** gesture has been seen in **6 consecutive frames** (about 0.2 s at 30 fps). The meter under the gesture name shows that build-up.
 - Losing the hand doesn't cancel the current command. The drone keeps doing what it was told, so a hand briefly leaving the frame isn't treated as an instruction.
-- Steering uses where your wrist is in the (mirrored) frame, with a dead zone in the middle so a resting hand flies straight.
+- Steering comes from how far your hand is tilted, like a joystick: the angle of the line from the wrist to the middle-finger knuckle. That line barely changes between gestures, so you can turn while holding any of them. Under 12° counts as straight, and 40° is a full turn.
 
 This is the same problem that motivated our research on [real-time hand gesture recognition for UAV control with an LSTM](#background): the decision needs to look at a short sequence of frames, not a single one. Here a simple frame-count rule stands in for the sequence model, so the demo stays small and runs anywhere.
 
