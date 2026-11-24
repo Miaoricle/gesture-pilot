@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta name="theme-color" content="#0b0e0d" />
+    <meta name="description" content="Fly a simulated drone with hand gestures from your webcam. Gesture recognition runs in the browser with MediaPipe; nothing is uploaded." />
+    <title>Gesture Pilot: fly a drone with hand gestures</title>
+  </head>
+  <body>
+    <header class="bar">
+      <div class="brand">Gesture Pilot</div>
+      <div class="chips">
+        <span class="chip" id="phase">Landed</span>
+        <span class="chip dim" id="source">Keyboard</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel field" aria-label="Flying field">
+        <canvas id="field" role="img" aria-label="Top-down map of the drone and its flight path"></canvas>
+        <dl class="hud">
+          <div><dt>Alt</dt><dd><span id="alt">0.0</span><small>m</small></dd></div>
+          <div><dt>Spd</dt><dd><span id="spd">0.0</span><small>m/s</small></dd></div>
+          <div><dt>Hdg</dt><dd><span id="hdg">000</span><small>°</small></dd></div>
+          <div><dt>Pos</dt><dd><span id="pos">0, 0</span></dd></div>
+        </dl>
+        <button class="btn ghost reset" id="reset" type="button">Reset</button>
+      </section>
+
+      <aside class="side">
+        <section class="panel cam" aria-label="Camera">
+          <div class="cam-view">
+            <video id="video" playsinline muted></video>
+            <canvas id="overlay"></canvas>
+            <div class="cam-empty" id="cam-empty">
+              <p>Turn on your camera to fly with your hand. Video stays on this device.</p>
+              <button class="btn" id="cam-start" type="button">Start camera</button>
+              <p class="status" id="cam-status" role="status"></p>
+            </div>
+          </div>
+          <div class="readout">
+            <div class="row"><span class="label">Gesture</span><b id="gesture">—</b><span class="score" id="score"></span></div>
+            <div class="meter" aria-hidden="true"><i id="meter"></i></div>
+            <div class="row"><span class="label">Command</span><b class="cmd" id="command">—</b></div>
+            <div class="row"><span class="label">Steer</span><div class="steer" aria-hidden="true"><i id="steer"></i></div></div>
+          </div>
+          <button class="btn ghost" id="cam-stop" type="button" hidden>Stop camera</button>
+        </section>
+
+        <section class="panel legend" aria-labelledby="legend-title">
+          <h2 id="legend-title">Controls</h2>
+          <table>
+            <thead><tr><th>Hand</th><th>Command</th><th>Key</th></tr></thead>
+            <tbody>
+              <tr><td>Thumb up</td><td>Take off</td><td><kbd>T</kbd></td></tr>
+              <tr><td>Fist</td><td>Land</td><td><kbd>L</kbd></td></tr>
+              <tr><td>Open palm</td><td>Hover</td><td><kbd>Space</kbd></td></tr>
+              <tr><td>Point up</td><td>Climb</td><td><kbd>W</kbd></td></tr>
+              <tr><td>Thumb down</td><td>Descend</td><td><kbd>S</kbd></td></tr>
+              <tr><td>Victory (V)</td><td>Forward</td><td><kbd>↑</kbd></td></tr>
+              <tr><td>Hand left / right</td><td>Turn</td><td><kbd>←</kbd> <kbd>→</kbd></td></tr>
+            </tbody>
+          </table>
+          <p class="note">Hold a gesture steady for a moment. A command only changes after the same gesture is seen for several frames in a row, so one blurry frame can't make the drone do something you didn't ask for.</p>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="foot">
+      Hand tracking by MediaPipe Gesture Recognizer, running in your browser.
+      <a href="https://github.com/Miaoricle/gesture-pilot">Source on GitHub</a>
+    </footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
